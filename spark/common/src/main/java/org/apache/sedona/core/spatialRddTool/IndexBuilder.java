@@ -27,6 +27,7 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.SpatialIndex;
 import org.locationtech.jts.index.quadtree.Quadtree;
+import org.locationtech.jts.index.strtree.ExtendedSTRtree;
 import org.locationtech.jts.index.strtree.STRtree;
 
 public final class IndexBuilder<T extends Geometry>
@@ -42,6 +43,8 @@ public final class IndexBuilder<T extends Geometry>
     SpatialIndex spatialIndex;
     if (indexType == IndexType.RTREE) {
       spatialIndex = new STRtree();
+    } else if (indexType == IndexType.EXTENDED_RTREE) {
+      spatialIndex = new ExtendedSTRtree();
     } else {
       spatialIndex = new Quadtree();
     }

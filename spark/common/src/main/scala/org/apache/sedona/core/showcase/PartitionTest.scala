@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sedona.core
+package org.apache.sedona.core.showcase
 
 import org.apache.sedona.common.enums.FileDataSplitter
 import org.apache.sedona.core.enums.{DistanceMetric, GridType, IndexType}
-import org.apache.sedona.core.geometryEntities.GeometryWithDistance
 import org.apache.sedona.core.knnJoinJudgement.KnnJoinJudgement
 import org.apache.sedona.core.serde.SedonaKryoRegistrator
 import org.apache.sedona.core.spatialOperator.{JoinQuery, KnnJoinQuery}
@@ -80,10 +79,14 @@ object PartitionTest {
     // 设置提交任务的用户
     //    System.setProperty("HADOOP_USER_NAME", "root")
     val resourceFolder = System.getProperty("user.dir") + "/src/test/resources"
-//    val resourceFolder = ""
+    //    val resourceFolder = "file:///vda/cdc"
 
     // 初始化环境
-    val conf = new SparkConf().setAppName("QGCDC_Sedona")
+    val conf = new SparkConf()
+      .setAppName("QGCDC_Sedona")
+      .setMaster("spark://10.101.242.200:7077")
+    //      .set("spark.driver.host", "10.101.61.12")
+    //      .setJars(List("E:\\Projects\\jars\\PartitionTest-1.0-SNAPSHOT.jar"))
     if (!conf.contains("spark.master"))
       conf.setMaster("local[*]")
     //          conf.setMaster("spark://Master:7077")
@@ -93,10 +96,10 @@ object PartitionTest {
       .set("spark.kryoserializer.buffer.max", "512M")
       .set("spark.executor.extraJavaOptions", "-Dfile.encoding=UTF-8")
       .set("spark.driver.extraJavaOptions", "-Dfile.encoding=UTF-8")
-      //      .set("spark.driver.memory", "8G")
-      //      .set("spark.executor.memory", "4G")
-      .set("spark.executor.instances", "8")
-      .set("spark.executor.cores", "8")
+    //      .set("spark.driver.memory", "8G")
+    //      .set("spark.executor.memory", "4G")
+//      .set("spark.executor.instances", "8")
+//      .set("spark.executor.cores", "16")
 
     val spark: SparkSession.Builder = SparkSession.builder().config(conf)
     val sparkSession = spark.getOrCreate()
@@ -106,14 +109,14 @@ object PartitionTest {
     indexType = IndexType.RTREE
     //    gridType = NewGridType.QUADTREE
     //    gridType = NewGridType.QUADTREEWF
-    val sparkExecCores: Integer = conf.get("spark.executor.cores").toInt
-    val sparkNumExec: Integer = conf.get("spark.executor.instances").toInt
+//    val sparkExecCores: Integer = conf.get("spark.executor.cores").toInt
+//    val sparkNumExec: Integer = conf.get("spark.executor.instances").toInt
     //    val sparkNumExec: Int = sc.getExecutorMemoryStatus.size
-    System.out.println("sparkNumExec: " + sparkNumExec)
-    val countAllCores: Int = sparkExecCores * sparkNumExec
+//    System.out.println("sparkNumExec: " + sparkNumExec)
+//    val countAllCores: Int = sparkExecCores * sparkNumExec
     numPartitions = 16
     //    numPartitions = countAllCores
-    dataFileType = "TXT1"
+    dataFileType = "TXT2"
     dataFileType match {
       case "TXT1" => {
         //        for (i <- Range(1, 7)) {
@@ -123,11 +126,12 @@ object PartitionTest {
           for (gType <- List(
               GridType.QUADTREE,
               GridType.ImprovedQT,
-              GridType.QUADTREE_RTREE,
+//              GridType.QUADTREE_RTREE,
               GridType.KDBTREE,
-              GridType.Voronoi,
-              GridType.STRTREE,
-              GridType.Hilbert)) {
+//              GridType.Voronoi,
+              GridType.STRTREE
+//              GridType.Hilbert
+            )) {
             //          for (gType <- List(GridType.QUADTREE_RTREE)) {
             gridType = gType
             //          for (m <- Range(5, 31, 2)) {
@@ -145,24 +149,20 @@ object PartitionTest {
             val formatter = DateTimeFormat.forPattern("MMdd")
             val time = formatter.print(LocalDate.now())
             println("time" + time)
+            //            dataInputLocation = resourceFolder + "/data/SyntheticDatasets/" + dataFileName + "_new.csv"
+            //            clusterResultOutputLocation = resourceFolder + "/ResultData/clusterResult/QGCDC/" + time + filePrefix + ".txt"
+            //            KNNResultOutputLocation = resourceFolder + "/ResultData/KNNResult/QGCDC/" + time + filePrefix
+            //            partitionResultOutPutLocation = resourceFolder + "/ResultData/partitionResult/QGCDC/" + time + filePrefix
+            val inputResourceFolder: String = "hdfs://Master:9000/data/CDC"
+            val outputResourceFolder: String = "/spark/CDC/result"
             dataInputLocation =
-              resourceFolder + "/data/SyntheticDatasets/" + dataFileName + "_new.csv"
+              inputResourceFolder + "/SyntheticDatasets/" + dataFileName + "_new.csv"
             clusterResultOutputLocation =
-              resourceFolder + "/ResultData/clusterResult/QGCDC/" + time + filePrefix + ".txt"
+              outputResourceFolder + "/clusterResult/QGCDC/" + time + filePrefix + ".txt"
             KNNResultOutputLocation =
-              resourceFolder + "/ResultData/KNNResult/QGCDC/" + time + filePrefix
+              outputResourceFolder + "/KNNResult/QGCDC/" + time + filePrefix
             partitionResultOutPutLocation =
-              resourceFolder + "/ResultData/partitionResult/QGCDC/" + time + filePrefix
-//            val inputResourceFolder: String = "hdfs://Master:9000/data/CDC"
-//            val outputResourceFolder: String = "/spark/CDC/result"
-//            dataInputLocation =
-//              inputResourceFolder + "/SyntheticDatasets/" + dataFileName + "_new.csv"
-//            clusterResultOutputLocation =
-//              outputResourceFolder + "/clusterResult/QGCDC/" + time + filePrefix + ".txt"
-//            KNNResultOutputLocation =
-//              outputResourceFolder + "/KNNResult/QGCDC/" + time + filePrefix
-//            partitionResultOutPutLocation =
-//              outputResourceFolder + "/partitionResult/QGCDC/" + time + filePrefix
+              outputResourceFolder + "/partitionResult/QGCDC/" + time + filePrefix
             process()
           }
         }
@@ -174,11 +174,12 @@ object PartitionTest {
           for (gType <- List(
               GridType.QUADTREE,
               GridType.ImprovedQT,
-              GridType.QUADTREE_RTREE,
+//              GridType.QUADTREE_RTREE,
               GridType.KDBTREE,
-              GridType.Voronoi,
-              GridType.STRTREE,
-              GridType.Hilbert)) {
+//              GridType.Voronoi,
+              GridType.STRTREE
+//              GridType.Hilbert
+            )) {
             //          for (gType <- List(GridType.ImprovedQT)) {
             gridType = gType
             k = 50
@@ -254,7 +255,7 @@ object PartitionTest {
   def process() = {
     val pointRDD = readData()
     partition(pointRDD)
-    knnJoin(pointRDD)
+    knnJoin2(pointRDD)
   }
 
   def readData() = {
@@ -308,20 +309,20 @@ object PartitionTest {
     val allKNNJoinEnd: Long = System.currentTimeMillis()
     println("近邻搜索结束----------")
     println("时间：" + (allKNNJoinEnd - allKNNJoinStart) / 1000.0 + "秒")
-    val data = spatialRDD.rawSpatialRDD.collect()
-    val judgement = new KnnJoinJudgement[Point](k)
-    val trueKnnResult = judgement
-      .call(data.iterator, data.iterator)
-      .asScala
-      .map(pair => (pair.getLeft, pair.getRight))
-      .toArray
-    println("knnRDDPartitions: " + knnRDD.getNumPartitions)
-    //    ResultUtils.outputSTRTreeNode(spatialRDD, partitionResultOutPutLocation + "_nodeBound.csv")
-    ResultUtils.outputKnnResult2(
-      knnResult,
-      trueKnnResult,
-      KNNResultOutputLocation + "_knn.csv",
-      KNNResultOutputLocation + "_trueKnn.csv")
+//    val data = spatialRDD.rawSpatialRDD.collect()
+//    val judgement = new KnnJoinJudgement[Point](k)
+//    val trueKnnResult = judgement
+//      .call(data.iterator, data.iterator)
+//      .asScala
+//      .map(pair => (pair.getLeft, pair.getRight))
+//      .toArray
+//    println("knnRDDPartitions: " + knnRDD.getNumPartitions)
+//    //    ResultUtils.outputSTRTreeNode(spatialRDD, partitionResultOutPutLocation + "_nodeBound.csv")
+//    ResultUtils.outputKnnResult2(
+//      knnResult,
+//      trueKnnResult,
+//      KNNResultOutputLocation + "_knn.csv",
+//      KNNResultOutputLocation + "_trueKnn.csv")
 
   }
 

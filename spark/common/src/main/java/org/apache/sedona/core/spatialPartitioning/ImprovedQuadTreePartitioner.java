@@ -16,72 +16,61 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sedona.core.spatialPartitioning;
 
-import org.apache.sedona.core.enums.GridType;
+import java.util.Iterator;
+import javax.annotation.Nullable;
 import org.apache.sedona.common.geometryObjects.Circle;
+import org.apache.sedona.core.enums.GridType;
 import org.apache.sedona.core.joinJudgement.DedupParams;
 import org.apache.sedona.core.spatialPartitioning.ImprovedQT.ImprovedQuadTree;
 import org.locationtech.jts.geom.Geometry;
 import scala.Tuple2;
 
-import javax.annotation.Nullable;
-import java.util.Iterator;
+public class ImprovedQuadTreePartitioner extends SpatialPartitioner {
+  private final ImprovedQuadTree<? extends Geometry> quadTree;
 
-public class ImprovedQuadTreePartitioner
-        extends SpatialPartitioner
-{
-    private final ImprovedQuadTree<? extends Geometry> quadTree;
+  public ImprovedQuadTreePartitioner(ImprovedQuadTree<? extends Geometry> quadTree) {
+    super(GridType.ImprovedQT, quadTree.fetchLeafZones());
+    this.quadTree = quadTree;
 
-    public ImprovedQuadTreePartitioner(ImprovedQuadTree<? extends Geometry> quadTree)
-    {
-        super(GridType.ImprovedQT, quadTree.fetchLeafZones());
-        this.quadTree = quadTree;
+    // Make sure not to broadcast all the samples used to build the Quad
+    // tree to all nodes which are doing partitioning
+    this.quadTree.dropElements();
+  }
 
-        // Make sure not to broadcast all the samples used to build the Quad
-        // tree to all nodes which are doing partitioning
-        this.quadTree.dropElements();
+  @Override
+  public Iterator<Tuple2<Integer, Geometry>> placeObject(Geometry spatialObject) throws Exception {
+
+    if (spatialObject instanceof Circle) {
+      return quadTree.placeObjectWithFilter(spatialObject);
     }
 
-    @Override
-    public Iterator<Tuple2<Integer, Geometry>> placeObject(Geometry spatialObject)
-            throws Exception
-    {
+    return quadTree.placeObject(spatialObject);
+  }
 
-        if(spatialObject instanceof Circle){
-            return quadTree.placeObjectWithFilter(spatialObject);
-        }
+  @Nullable
+  @Override
+  public DedupParams getDedupParams() {
+    return new DedupParams(grids);
+  }
 
-        return quadTree.placeObject(spatialObject);
+  @Override
+  public int numPartitions() {
+    return grids.size();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || !(o instanceof ImprovedQuadTreePartitioner)) {
+      return false;
     }
 
-    @Nullable
-    @Override
-    public DedupParams getDedupParams()
-    {
-        return new DedupParams(grids);
-    }
+    final ImprovedQuadTreePartitioner other = (ImprovedQuadTreePartitioner) o;
+    return other.quadTree.equals(this.quadTree);
+  }
 
-    @Override
-    public int numPartitions()
-    {
-        return grids.size();
-    }
-
-    @Override
-    public boolean equals(Object o)
-    {
-        if (o == null || !(o instanceof ImprovedQuadTreePartitioner)) {
-            return false;
-        }
-
-        final ImprovedQuadTreePartitioner other = (ImprovedQuadTreePartitioner) o;
-        return other.quadTree.equals(this.quadTree);
-    }
-
-    public ImprovedQuadTree<? extends Geometry> getQuadTree() {
-        return quadTree;
-    }
-
+  public ImprovedQuadTree<? extends Geometry> getQuadTree() {
+    return quadTree;
+  }
 }

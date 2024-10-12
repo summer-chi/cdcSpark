@@ -17,20 +17,21 @@
   ~ under the License.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sedona</groupId>
         <artifactId>sedona-spark-parent-${spark.compat.version}_${scala.compat.version}</artifactId>
         <version>1.6.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-	<artifactId>sedona-spark-common-${spark.compat.version}_${scala.compat.version}</artifactId>
+    <artifactId>sedona-spark-common-${spark.compat.version}_${scala.compat.version}</artifactId>
 
-	<name>${project.groupId}:${project.artifactId}</name>
-	<description>A cluster computing system for processing large-scale spatial data: Common SQL API.</description>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A cluster computing system for processing large-scale spatial data: Common SQL API.</description>
     <url>http://sedona.apache.org/</url>
-	<packaging>jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>
@@ -216,14 +217,14 @@
             </exclusions>
         </dependency>
     </dependencies>
-	<build>
+    <build>
         <sourceDirectory>src/main/java</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <executions>
-                   <execution>
+                    <execution>
                         <id>attach-javadocs</id>
                         <configuration>
                             <skip>true</skip>
@@ -239,6 +240,55 @@
                 <groupId>org.scalastyle</groupId>
                 <artifactId>scalastyle-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.apache.sedona.core.showcase.PartitionTest</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+<!--            <plugin>-->
+<!--                <artifactId>maven-assembly-plugin</artifactId>-->
+<!--                <version>3.1.0</version>-->
+<!--                <configuration>-->
+<!--                    <descriptors>-->
+<!--                        <descriptor>src/main/resources/assembly.xml</descriptor>-->
+<!--                    </descriptors>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>make-assembly</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <archive>-->
+<!--                                <manifest>-->
+<!--                                    <mainClass>org.apache.sedona.core.PartitionTest</mainClass>-->
+<!--                                </manifest>-->
+<!--                            </archive>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
         <resources>
             <resource>
@@ -250,5 +300,5 @@
                 <directory>src/test/resources</directory>
             </testResource>
         </testResources>
-	</build>
+    </build>
 </project>

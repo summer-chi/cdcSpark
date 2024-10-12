@@ -23,6 +23,10 @@ import org.apache.log4j.Logger;
 import org.apache.sedona.common.geometryObjects.Circle;
 import org.apache.sedona.common.geometrySerde.GeometrySerde;
 import org.apache.sedona.common.geometrySerde.SpatialIndexSerde;
+import org.apache.sedona.core.geometryEntities.CDCPoint;
+import org.apache.sedona.core.geometryEntities.ExtendedCircle;
+import org.apache.sedona.core.geometryEntities.GeometryWithDistance;
+import org.apache.sedona.core.geometryEntities.GeometryWithDistanceSerde;
 import org.apache.spark.serializer.KryoRegistrator;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.GeometryCollection;
@@ -33,6 +37,7 @@ import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.index.quadtree.Quadtree;
+import org.locationtech.jts.index.strtree.ExtendedSTRtree;
 import org.locationtech.jts.index.strtree.STRtree;
 
 public class SedonaKryoRegistrator implements KryoRegistrator {
@@ -43,6 +48,7 @@ public class SedonaKryoRegistrator implements KryoRegistrator {
   public void registerClasses(Kryo kryo) {
     GeometrySerde serializer = new GeometrySerde();
     SpatialIndexSerde indexSerializer = new SpatialIndexSerde(serializer);
+    GeometryWithDistanceSerde geometryWithDistanceSerde = new GeometryWithDistanceSerde();
 
     log.info("Registering custom serializers for geometry types");
 
@@ -58,5 +64,9 @@ public class SedonaKryoRegistrator implements KryoRegistrator {
     // TODO: Replace the default serializer with default spatial index serializer
     kryo.register(Quadtree.class, indexSerializer);
     kryo.register(STRtree.class, indexSerializer);
+    kryo.register(ExtendedSTRtree.class, indexSerializer);
+    kryo.register(ExtendedCircle.class, serializer);
+    kryo.register(GeometryWithDistance.class, geometryWithDistanceSerde);
+    kryo.register(CDCPoint.class, serializer);
   }
 }

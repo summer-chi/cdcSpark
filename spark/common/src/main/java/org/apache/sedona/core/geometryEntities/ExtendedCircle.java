@@ -16,35 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sedona.core.enums;
+package org.apache.sedona.core.geometryEntities;
 
-import java.io.Serializable;
+import org.apache.sedona.common.geometryObjects.Circle;
+import org.locationtech.jts.geom.Geometry;
 
-// TODO: Auto-generated Javadoc
+/** @ClassName:ExtendedCircle @Description:TODO @Author:yolo @Date:2024/10/914:17 @Version:1.0 */
+public class ExtendedCircle extends Circle {
 
-/** The Enum IndexType. */
-public enum IndexType implements Serializable {
+  private int partitionId;
 
-  /** The quadtree. */
-  QUADTREE,
+  public ExtendedCircle(Geometry centerGeometry, Double givenRadius) {
+    super(centerGeometry, givenRadius);
+  }
 
-  /** The rtree. */
-  RTREE,
+  public int getPartitionId() {
+    return partitionId;
+  }
 
-  EXTENDED_RTREE;
-
-  /**
-   * Gets the index type.
-   *
-   * @param str the str
-   * @return the index type
-   */
-  public static IndexType getIndexType(String str) {
-    for (IndexType me : IndexType.values()) {
-      if (me.name().equalsIgnoreCase(str)) {
-        return me;
-      }
-    }
-    return null;
+  public void setPartitionId(int partitionId) {
+    this.partitionId = partitionId;
   }
 }
